@@ -8,9 +8,7 @@ BOARD_COLS = 7
 BOARD_ROWS = 6
 AI = 1
 PLAYER = -1
-state = [['1', '2', '3'],
-            ['4', '5', '6'],
-            ['7', '8', '9']]
+
 #AI is 1, Human is -1
 class State:
     """
@@ -21,7 +19,7 @@ class State:
         self.p1 = p1
         self.p2 = p2
         self.isEnd = False
-        self.playerSymbol = 1
+        self.playerSymbol = AI
     def showBoard(self):
         """
         Objective: Print the board for the user
@@ -31,9 +29,9 @@ class State:
             row_symbol = '| '
             for j in range(BOARD_COLS):
                 if self.board[i][j] == 1:
-                    row_symbol += ('X')
+                    row_symbol += ('⚫')
                 elif self.board[i][j] == -1:
-                    row_symbol += ('O')
+                    row_symbol += ('⚪')
                 else:
                     row_symbol += ''
                 row_symbol += ' | '
@@ -50,9 +48,9 @@ class State:
             result, self.isEnd = checkWinner(self.board)
             self.showBoard()
             if result is not None:
-                if result == 1:
+                if result == AI:
                     print('Computer Wins')
-                elif result == -1:
+                elif result == PLAYER:
                     print('You have defied logic!')
                 else:
                     print('Draw')
@@ -64,10 +62,10 @@ class State:
             self.showBoard()
             result, self.isEnd = checkWinner(self.board)
             if result is not None:
-                if result == 1:
-                    print(self.p1.name, 'wins!')
-                elif result == -1:
-                    print(self.p2.name, 'wins!')
+                if result == AI:
+                    print('Computer wins!')
+                elif result == PLAYER:
+                    print('Player wins!')
                 else:
                     print('Draw')
                 self.isEnd = True
@@ -88,14 +86,18 @@ class Player:
         Objective: Make human move on board. Replaces valid cell with marker
         """
         while True:
-            cell = int(input('Choose cell: '))
-            i = (cell-1) // 3
-            j = (cell-1)%3
-            if board[i][j]== 0:
-                board[i][j] == playerSymbol
-                return (i, j)
+            column = int(input('Choose column: '))
+            move = valid_move(board, column)
+            if move is not None:
+                return move
             else:
-                print('Invalid Move')
+                print('The column is filled up')
+            
+    def valid_move(board, column):
+        for i in range(BOARD_ROWS - 1, 0, -1):
+            if board[i][j] == 0:
+                return (i, j)
+        return None
 #Represents the rewards that will influence the bot's decisions
 scores = { 
     -1: -10,
@@ -139,14 +141,22 @@ def check_four(board, x, y):
     vert = 0
     for i in range(x, x + 4):
         for j in range(y, y + 4):
-            vert += board[j][i]
             hori += board[i][j]
-            if vert == 4 or hori == 4:
-                return AI
-            if vert == -4 or hori == -4:
-                return PLAYER
-    diag_sum1 = sum([board[i, i] for i in range(4)])
-    diag_sum2 = sum([board[i, 4 - i - 1] for i in range(4)])
+        if hori == 4:
+            return AI
+        if hori == -4:
+            return PLAYER
+    for i in range(y, y + 4):
+        for j in range(x, x + 4):
+            vert += board[j][i]
+        if vert == 4:
+            return AI
+        if vert == -4:
+            return PLAYER
+          
+            
+    diag_sum1 = sum([board[i][i] for i in range(x, x+4)])
+    diag_sum2 = sum([board[i][4 - i - 1] for i in range(x, x + 4)])
     check_diag = max(abs(diag_sum1), abs(diag_sum2))
     if check_diag == 4:
         if diag_sum1 == 4 or diag_sum2 == 4:
@@ -163,8 +173,8 @@ def checkWinner(board):
         Objective: check the result of the board, see the outcome
         """
         #Does a 4x4 window and scans entire board
-        for i in range(BOARD_ROWS - 4):
-            for j in range(BOARD_COLS - 4):
+        for i in range(BOARD_ROWS - 3):
+            for j in range(BOARD_COLS - 3):
                 result = check_four(board, i, j)
                 if result == 1:
                     return AI, True
@@ -196,13 +206,13 @@ def minimax(board, depth, isMaximizing, alpha, beta):
         return scores[current_result]
     if isMaximizing: #Finds best move if AI is next, maximize score
         best_score = -float('inf')
-        for i in range(3):
-            for j in range(3):
-                #Check if spot available, AI turn
-                if board[i][j] == 0:
-                    board[i][j] = AI
+        for i in range(BOARD_COLS):
+            for j in range(BOARD_ROWS - 1, 0, -1):
+                #Check if spot available
+                if board[j][i] == 0:
+                    board[j][i] = AI
                     score = minimax(board, depth+1, False, alpha, beta)
-                    board[i][j] = 0
+                    board[j][i] = 0
                     best_score = max(score - depth , best_score) #We want the AI to win ASAP
                     alpha = max(alpha, best_score) #Maximize score, best explored option for maximizer from the current state
                     if beta <= alpha: #A better option exists so prune 
@@ -210,35 +220,26 @@ def minimax(board, depth, isMaximizing, alpha, beta):
         return best_score
     else:
         best_score = float('inf')
-        for i in range(3):
-            for j in range(3):
-                #Check if spot available, player turn
-                if board[i][j] == 0:
-                    board[i][j] = PLAYER
+        for i in range(BOARD_COLS):
+            for j in range(BOARD_ROWS - 1, 0, -1):
+                #Check if spot available
+                if board[j][i] == 0:
+                    board[j][i] = PLAYER
                     score = minimax(board, depth+1, True, alpha, beta)
-                    board[i][j] = 0
+                    board[j][i] = 0
                     best_score = min(depth + score, best_score) #We want the AI to lose as slowly as possible
                     beta = min(beta, best_score) #Minimize score, best explored option for minimizer from the current state
                     if beta <= alpha:
                         return best_score
         return best_score
-def print_board(game_state):
-    """
-    Used to print template board
-    """
-    print('-------------')
-    print('| ' + str(game_state[0][0]) + ' | ' + str(game_state[0][1]) + ' | ' + str(game_state[0][2]) + ' |')
-    print('-------------')
-    print('| ' + str(game_state[1][0]) + ' | ' + str(game_state[1][1]) + ' | ' + str(game_state[1][2]) + ' |')
-    print('-------------')
-    print('| ' + str(game_state[2][0]) + ' | ' + str(game_state[2][1]) + ' | ' + str(game_state[2][2]) + ' |')
-    print('-------------')
+
 
 # print('Please follow this cell notation for movemaking: ')
 # print_board(state)
 # print('Computer goes first :P ')
-p1 = Computer('p1')
-p2 = Player('p2')
+# p1 = Computer('p1')
+# p2 = Player('p2')
 
-st = State(p1, p2)
-st.showBoard()
+# st = State(p1, p2)
+# print(st.board)
+# st.play()
