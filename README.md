@@ -17,6 +17,6 @@ $ git clone https://github.com/JSheng1689/Tic-Tac-Toe-AI.git
 ```
 Afterwards, for the reinforced learning agent, uncomment the code denoted at the bottom of the file. Adjust the number of rounds based on how trained you want the bot to be.
 
-### Improvements
+### Future Improvements
 Implementing a Monte Carlo Search Tree as another unique approach. Games such as Go and Chess benefit from MCST, as they have a massive number of game states.
 In addition, I want to make the game more user friendly; for example, clicking the cells instead of declaring the cell as a number
