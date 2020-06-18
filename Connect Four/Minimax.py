@@ -3,11 +3,13 @@ import numpy as np
 Used Alpha-Beta Pruning to optimize Minimax algorithm.
 The algorithm checks the maximizers and minimizers and when it isn't possible to beat a better option,
 it stops searching and moves onto the next options.
+I evaluate the board by counting the length and number of streaks (i.e. 3 in a row is worth more than 2 in a row).
 """
 BOARD_COLS = 7
 BOARD_ROWS = 6
 AI = 1
 PLAYER = -1
+DEPTH = 2
 
 #AI is 1, Human is -1
 class State:
@@ -25,18 +27,19 @@ class State:
         Objective: Print the board for the user
         """
         for i in range(BOARD_ROWS):
-            print('----------------------')
-            row_symbol = '| '
+            print('        ------------------------------------')
+            row_symbol = '        | '
             for j in range(BOARD_COLS):
                 if self.board[i][j] == 1:
                     row_symbol += ('⚫')
                 elif self.board[i][j] == -1:
                     row_symbol += ('⚪')
                 else:
-                    row_symbol += ''
+                    row_symbol += '  '
                 row_symbol += ' | '
             print(row_symbol)
-        print('----------------------')
+        print('        ------------------------------------')
+        print('Column:    1    2    3    4    5    6    7')
     def play(self):
         """
         Objective: Play game against Computer
@@ -51,7 +54,7 @@ class State:
                 if result == AI:
                     print('Computer Wins')
                 elif result == PLAYER:
-                    print('You have defied logic!')
+                    print('Player Wins!')
                 else:
                     print('Draw')
                 self.isEnd = True
@@ -93,17 +96,13 @@ class Player:
             else:
                 print('The column is filled up')
             
-    def valid_move(board, column):
-        for i in range(BOARD_ROWS - 1, 0, -1):
-            if board[i][j] == 0:
-                return (i, j)
-        return None
+def valid_move(board, column):
+    for i in range(BOARD_ROWS - 1, 0, -1):
+        if board[i][column - 1] == 0:
+            return (i, column - 1)
+    return None
 #Represents the rewards that will influence the bot's decisions
-scores = { 
-    -1: -10,
-    1: 10,
-    0: 0
-}
+
 class Computer:
     """
     Represents the computer we will be playing against
@@ -127,7 +126,7 @@ class Computer:
                 #Check if spot available
                 if board[j][i] == 0:
                     board[j][i] = AI
-                    score = minimax(board, 0, False, -float('inf'), float('inf'))
+                    score = minimax(board, DEPTH, True, -float('inf'), float('inf'))
                     board[j][i] = 0
                     if score > best_score:
                         best_score = score
@@ -136,30 +135,33 @@ class Computer:
         board[best_move] = AI
         return best_move
 
-def check_four(board, x, y):
+def check_lines(board, x, y, num):
+    """
+    Checks the number of pieces in a row for the player or bot
+    Use it to check 2, 3, and 4 in a row
+    Helper function as sliding window to check entire board
+    """
     hori = 0
     vert = 0
-    for i in range(x, x + 4):
-        for j in range(y, y + 4):
+    for i in range(x, x + num):
+        for j in range(y, y + num):
             hori += board[i][j]
-        if hori == 4:
+        if hori == num:
             return AI
-        if hori == -4:
+        if hori == -num:
             return PLAYER
-    for i in range(y, y + 4):
-        for j in range(x, x + 4):
+    for i in range(y, y + num):
+        for j in range(x, x + num):
             vert += board[j][i]
-        if vert == 4:
+        if vert == num:
             return AI
-        if vert == -4:
+        if vert == -num:
             return PLAYER
-          
-            
-    diag_sum1 = sum([board[i][i] for i in range(x, x+4)])
-    diag_sum2 = sum([board[i][4 - i - 1] for i in range(x, x + 4)])
+    diag_sum1 = sum([board[i][i] for i in range(x, x+num)])
+    diag_sum2 = sum([board[i][num - i - 1] for i in range(x, x + num)])
     check_diag = max(abs(diag_sum1), abs(diag_sum2))
-    if check_diag == 4:
-        if diag_sum1 == 4 or diag_sum2 == 4:
+    if check_diag == num:
+        if diag_sum1 == num or diag_sum2 == num:
             return AI
         else:
             return PLAYER
@@ -175,7 +177,7 @@ def checkWinner(board):
         #Does a 4x4 window and scans entire board
         for i in range(BOARD_ROWS - 3):
             for j in range(BOARD_COLS - 3):
-                result = check_four(board, i, j)
+                result = check_lines(board, i, j, 4)
                 if result == 1:
                     return AI, True
                 elif result == -1:
@@ -190,6 +192,38 @@ def checkWinner(board):
         if draw:
             return 0, True
         return None, False
+def evaluate_board(board):
+    """
+    There's many ways to evaluate the board.
+    I essentially value the streaks and its length.
+    4 is good/bad depending on who wins,
+    3 is valued 100
+    2 is valued 1
+
+    Others ways to evaluate board
+    """
+    result, _ = checkWinner(board)
+    if result == PLAYER:
+        return -100000
+    elif result == AI:
+        return 100000
+    elif result == 0:
+        return 0
+    else:
+        threes = 0
+        twos = 0
+        for i in range(BOARD_ROWS - 2):
+            for j in range(BOARD_COLS - 2):
+                result = check_lines(board, i, j, 3)
+                if result == AI:
+                    threes += 1
+        for i in range(BOARD_ROWS - 1):
+            for j in range(BOARD_COLS - 1):
+                result = check_lines(board, i, j, 2)
+                if result == AI:
+                    twos += 1
+        return 100*threes + twos
+
 def minimax(board, depth, isMaximizing, alpha, beta):
     """
     Inputs: state of board, 
@@ -202,8 +236,8 @@ def minimax(board, depth, isMaximizing, alpha, beta):
 
     """
     current_result, _ = checkWinner(board)
-    if current_result is not None: #If game done, return score
-        return scores[current_result]
+    if depth == 0 or current_result is not None: #If game done, return score
+        return evaluate_board(board)
     if isMaximizing: #Finds best move if AI is next, maximize score
         best_score = -float('inf')
         for i in range(BOARD_COLS):
@@ -211,11 +245,11 @@ def minimax(board, depth, isMaximizing, alpha, beta):
                 #Check if spot available
                 if board[j][i] == 0:
                     board[j][i] = AI
-                    score = minimax(board, depth+1, False, alpha, beta)
+                    score = minimax(board, depth-1, False, alpha, beta)
                     board[j][i] = 0
                     best_score = max(score - depth , best_score) #We want the AI to win ASAP
                     alpha = max(alpha, best_score) #Maximize score, best explored option for maximizer from the current state
-                    if beta <= alpha: #A better option exists so prune 
+                    if alpha >= beta: #A better option exists so prune 
                         return best_score
         return best_score
     else:
@@ -225,7 +259,7 @@ def minimax(board, depth, isMaximizing, alpha, beta):
                 #Check if spot available
                 if board[j][i] == 0:
                     board[j][i] = PLAYER
-                    score = minimax(board, depth+1, True, alpha, beta)
+                    score = minimax(board, depth-1, True, alpha, beta)
                     board[j][i] = 0
                     best_score = min(depth + score, best_score) #We want the AI to lose as slowly as possible
                     beta = min(beta, best_score) #Minimize score, best explored option for minimizer from the current state
@@ -234,12 +268,11 @@ def minimax(board, depth, isMaximizing, alpha, beta):
         return best_score
 
 
-# print('Please follow this cell notation for movemaking: ')
-# print_board(state)
-# print('Computer goes first :P ')
-# p1 = Computer('p1')
-# p2 = Player('p2')
 
-# st = State(p1, p2)
-# print(st.board)
-# st.play()
+print('Computer goes first :P ')
+p1 = Computer('p1')
+p2 = Player('p2')
+
+st = State(p1, p2)
+st.showBoard()
+st.play()
