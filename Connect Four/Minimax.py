@@ -9,7 +9,7 @@ BOARD_COLS = 7
 BOARD_ROWS = 6
 AI = 1
 PLAYER = -1
-DEPTH = 2
+DEPTH = 3
 
 #AI is 1, Human is -1
 class State:
@@ -212,11 +212,13 @@ def evaluate_board(board):
     else:
         threes = 0
         twos = 0
+        #Check how many three in a row
         for i in range(BOARD_ROWS - 2):
             for j in range(BOARD_COLS - 2):
                 result = check_lines(board, i, j, 3)
                 if result == AI:
                     threes += 1
+        #Check how many two in a row
         for i in range(BOARD_ROWS - 1):
             for j in range(BOARD_COLS - 1):
                 result = check_lines(board, i, j, 2)
@@ -251,6 +253,7 @@ def minimax(board, depth, isMaximizing, alpha, beta):
                     alpha = max(alpha, best_score) #Maximize score, best explored option for maximizer from the current state
                     if alpha >= beta: #A better option exists so prune 
                         return best_score
+                    break
         return best_score
     else:
         best_score = float('inf')
@@ -265,6 +268,7 @@ def minimax(board, depth, isMaximizing, alpha, beta):
                     beta = min(beta, best_score) #Minimize score, best explored option for minimizer from the current state
                     if beta <= alpha:
                         return best_score
+                    break
         return best_score
 
 
