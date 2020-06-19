@@ -1,6 +1,12 @@
-# Tic Tac Toe Bot
+# Turn Based Connection Game AI
 
-Using Python, I implemented the game of Tic Tac Toe. You can play with another person or against a bot. For the bot, I implemented two methods of how they would play. For the first one, I used the minimax algorithm, optimized with alpha beta pruning, where the bot would always make the optimal move, thus never losing. For the second, I used reinforcement learning, using value iteration, with two agents and saved the memory of game states to the bot you would play against. You can adjust the difficulty based on the number of rounds the bots train.
+Using Python, I implemented various connection based games and solutions for the AI to follow.
+
+### Tic Tac Toe 
+I used minimax algorithm and reinforced learning for the computer. As it is possible to run through all game states, the worst case scenario for the AI is a draw. 
+
+### Connect Four
+I used minimax algorithm. The evaluation board function is the most crucial, as it decides the value of the AI's moves. Since it cannot iterate through all possible games states (~4.5 trillion), it must return the move with most value, given a certain depth. I set the evaluation function to support its own streaks (4 in a row, 3 in a row, 2 in a row), while simultaneously attempting to stop the opponent's streaks. Further improvement is needed.
 
 
 ### Prerequisites
@@ -19,4 +25,4 @@ Afterwards, for the reinforced learning agent, uncomment the code denoted at the
 
 ### Future Improvements
 Implementing a Monte Carlo Search Tree as another unique approach. Games such as Go and Chess benefit from MCST, as they have a massive number of game states.
-In addition, I want to make the game more user friendly; for example, clicking the cells instead of declaring the cell as a number
+In addition, I want to make the game more user friendly; make it more visual and mouse-click based.
