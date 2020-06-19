@@ -21,7 +21,7 @@ class State:
         self.p1 = p1
         self.p2 = p2
         self.isEnd = False
-        self.playerSymbol = PLAYER
+        self.playerSymbol = AI
     def showBoard(self):
         """
         Objective: Print the board for the user
@@ -45,20 +45,6 @@ class State:
         Objective: Play game against Computer
         """
         while not self.isEnd:    
-            p2_action = self.p2.move(self.board, self.playerSymbol)
-            self.board[p2_action] = self.playerSymbol
-            self.playerSymbol *= -1
-            self.showBoard()
-            result, self.isEnd = checkWinner(self.board)
-            if result is not None:
-                if result == AI:
-                    print('Computer wins!')
-                elif result == PLAYER:
-                    print('Player wins!')
-                else:
-                    print('Draw')
-                self.isEnd = True
-                return 
             p1_action = self.p1.bestMove(self.board)
             self.board[p1_action] = self.playerSymbol
             self.playerSymbol *= -1
@@ -73,6 +59,20 @@ class State:
                     print('Draw')
                 self.isEnd = True
                 return
+            p2_action = self.p2.move(self.board, self.playerSymbol)
+            self.board[p2_action] = self.playerSymbol
+            self.playerSymbol *= -1
+            self.showBoard()
+            result, self.isEnd = checkWinner(self.board)
+            if result is not None:
+                if result == AI:
+                    print('Computer wins!')
+                elif result == PLAYER:
+                    print('Player wins!')
+                else:
+                    print('Draw')
+                self.isEnd = True
+                return 
 class Player:
     """
     Represents us, the human player
@@ -143,6 +143,8 @@ def check_lines(board, x, y, num):
     """
     hori = 0
     vert = 0
+    diag_sum1 = 0
+    diag_sum2 = 0
     for i in range(x, x + num):
         for j in range(y, y + num):
             hori += board[i][j]
@@ -157,14 +159,18 @@ def check_lines(board, x, y, num):
             return AI
         if vert == -num:
             return PLAYER
-    diag_sum1 = sum([board[i][i] for i in range(x, x+num)])
-    diag_sum2 = sum([board[i][num - i - 1] for i in range(x, x + num)])
-    check_diag = max(abs(diag_sum1), abs(diag_sum2))
-    if check_diag == num:
-        if diag_sum1 == num or diag_sum2 == num:
-            return AI
-        else:
-            return PLAYER
+    for i in range(num):
+        diag_sum1 += board[x + i][y + i]
+    if diag_sum1 == num:
+        return AI
+    if diag_sum1 == -num:
+        return PLAYER
+    for i in range(num):
+        diag_sum2 += board[x + i][num + y - i - 1]
+    if diag_sum2 == num:
+        return AI
+    if diag_sum2 == -num:
+        return PLAYER
     return None
 def checkWinner(board):
         """
@@ -279,7 +285,14 @@ def minimax(board, depth, isMaximizing, alpha, beta):
 print('Computer goes first :P ')
 p1 = Computer('p1')
 p2 = Player('p2')
-
 st = State(p1, p2)
-st.showBoard()
-st.play()
+board = [[0,0,0,0,0,0,1],
+         [0,0,0,0,0,1,0],
+         [0,0,0,0,1,0,0],
+         [0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0]]
+
+print(checkWinner(board))
+
+# st.play()
