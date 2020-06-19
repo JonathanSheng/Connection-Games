@@ -21,7 +21,7 @@ class State:
         self.p1 = p1
         self.p2 = p2
         self.isEnd = False
-        self.playerSymbol = AI
+        self.playerSymbol = 1
     def showBoard(self):
         """
         Objective: Print the board for the user
@@ -89,12 +89,15 @@ class Player:
         Objective: Make human move on board. Replaces valid cell with marker
         """
         while True:
-            column = int(input('Choose column: '))
-            move = valid_move(board, column)
-            if move is not None:
-                return move
-            else:
-                print('The column is filled up')
+            try:
+                column = int(input('Choose column: '))
+                move = valid_move(board, column)
+                if move is not None:
+                    return move
+                else:
+                    print('The column is filled up')
+            except:
+                print('Please Input only an integer')
             
 def valid_move(board, column):
     for i in range(BOARD_ROWS - 1, -1, -1):
@@ -122,11 +125,11 @@ class Computer:
         best_score = -float('inf')
         #Starts at the bottom of the board and checks up, takes into account gravity
         for i in range(BOARD_COLS):
-            for j in range(BOARD_ROWS - 1, 0, -1):
+            for j in range(BOARD_ROWS - 1, -1, -1):
                 #Check if spot available
                 if board[j][i] == 0:
                     board[j][i] = AI
-                    score = minimax(board, DEPTH, True, -float('inf'), float('inf'))
+                    score = minimax(board, DEPTH, False, -float('inf'), float('inf'))
                     board[j][i] = 0
                     if score > best_score:
                         best_score = score
@@ -213,29 +216,41 @@ def evaluate_board(board):
     result, _ = checkWinner(board)
     if result == PLAYER:
         return -100000
+    elif result == 0:
+        return 0
     else:
-        fours = 0
-        threes = 0
-        twos = 0
+        AI_fours = 0
+        AI_threes = 0
+        AI_twos = 0
+        P_fours = 0
+        P_threes = 0
+        P_twos = 0
         #Check how many fours in a row
         for i in range(BOARD_ROWS - 3):
             for j in range(BOARD_COLS - 3):
                 result = check_lines(board, i, j, 4)
                 if result == AI:
-                    fours += 1
+                    AI_fours += 1
+                if result == PLAYER:
+                    P_fours += 1
         #Check how many three in a row
         for i in range(BOARD_ROWS - 2):
             for j in range(BOARD_COLS - 2):
                 result = check_lines(board, i, j, 3)
                 if result == AI:
-                    threes += 1
+                    AI_threes += 1
+                if result == PLAYER:
+                    P_threes += 1
         #Check how many two in a row
         for i in range(BOARD_ROWS - 1):
             for j in range(BOARD_COLS - 1):
                 result = check_lines(board, i, j, 2)
                 if result == AI:
-                    twos += 1
-        return (100000*fours + 100*threes + twos)
+                    AI_twos += 1
+                if result == PLAYER:
+                    P_twos += 1
+        
+        return (100000*AI_fours + 100*AI_threes + AI_twos - 100000*P_fours - 100*P_threes - P_twos)
 
 def minimax(board, depth, isMaximizing, alpha, beta):
     """
@@ -254,13 +269,13 @@ def minimax(board, depth, isMaximizing, alpha, beta):
     if isMaximizing: #Finds best move if AI is next, maximize score
         best_score = -float('inf')
         for i in range(BOARD_COLS):
-            for j in range(BOARD_ROWS - 1, 0, -1):
+            for j in range(BOARD_ROWS - 1, -1, -1):
                 #Check if spot available
                 if board[j][i] == 0:
                     board[j][i] = AI
                     score = minimax(board, depth-1, False, alpha, beta)
                     board[j][i] = 0
-                    best_score = max(score - depth , best_score) #We want the AI to win ASAP
+                    best_score = max(score , best_score) #We want the AI to win ASAP
                     alpha = max(alpha, best_score) #Maximize score, best explored option for maximizer from the current state
                     if alpha >= beta: #A better option exists so prune 
                         return best_score
@@ -269,13 +284,13 @@ def minimax(board, depth, isMaximizing, alpha, beta):
     else:
         best_score = float('inf')
         for i in range(BOARD_COLS):
-            for j in range(BOARD_ROWS - 1, 0, -1):
+            for j in range(BOARD_ROWS - 1, -1, -1):
                 #Check if spot available
                 if board[j][i] == 0:
                     board[j][i] = PLAYER
                     score = minimax(board, depth-1, True, alpha, beta)
                     board[j][i] = 0
-                    best_score = min(depth + score, best_score) #We want the AI to lose as slowly as possible
+                    best_score = min(score , best_score) #We want the AI to lose as slowly as possible
                     beta = min(beta, best_score) #Minimize score, best explored option for minimizer from the current state
                     if beta <= alpha:
                         return best_score
