@@ -152,6 +152,7 @@ def check_lines(board, x, y, num):
             return AI
         if hori == -num:
             return PLAYER
+        hori = 0
     for i in range(y, y + num):
         for j in range(x, x + num):
             vert += board[j][i]
@@ -159,6 +160,7 @@ def check_lines(board, x, y, num):
             return AI
         if vert == -num:
             return PLAYER
+        vert = 0
     for i in range(num):
         diag_sum1 += board[x + i][y + i]
     if diag_sum1 == num:
@@ -286,13 +288,13 @@ print('Computer goes first :P ')
 p1 = Computer('p1')
 p2 = Player('p2')
 st = State(p1, p2)
-board = [[0,0,0,0,0,0,1],
-         [0,0,0,0,0,1,0],
-         [0,0,0,0,1,0,0],
-         [0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0]]
+# board = [[0,0,0,0,0,0,0],
+#          [0,0,0,0,0,0,0],
+#          [0,-1,0,0,0,0,0],
+#          [0,1,0,-1,0,0,0],
+#          [0,1,1,1,0,0,0],
+#          [0,1,1,-1,0,0,0]]
+# print(checkWinner(board))
+st.showBoard()
 
-print(checkWinner(board))
-
-# st.play()
+st.play()
