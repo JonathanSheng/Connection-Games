@@ -9,7 +9,7 @@ BOARD_COLS = 7
 BOARD_ROWS = 6
 AI = 1
 PLAYER = -1
-DEPTH = 3
+DEPTH = 4
 
 #AI is 1, Human is -1
 class State:
@@ -21,7 +21,7 @@ class State:
         self.p1 = p1
         self.p2 = p2
         self.isEnd = False
-        self.playerSymbol = AI
+        self.playerSymbol = PLAYER
     def showBoard(self):
         """
         Objective: Print the board for the user
@@ -44,7 +44,21 @@ class State:
         """
         Objective: Play game against Computer
         """
-        while not self.isEnd:
+        while not self.isEnd:    
+            p2_action = self.p2.move(self.board, self.playerSymbol)
+            self.board[p2_action] = self.playerSymbol
+            self.playerSymbol *= -1
+            self.showBoard()
+            result, self.isEnd = checkWinner(self.board)
+            if result is not None:
+                if result == AI:
+                    print('Computer wins!')
+                elif result == PLAYER:
+                    print('Player wins!')
+                else:
+                    print('Draw')
+                self.isEnd = True
+                return 
             p1_action = self.p1.bestMove(self.board)
             self.board[p1_action] = self.playerSymbol
             self.playerSymbol *= -1
@@ -59,20 +73,6 @@ class State:
                     print('Draw')
                 self.isEnd = True
                 return
-            p2_action = self.p2.move(self.board, self.playerSymbol)
-            self.board[p2_action] = self.playerSymbol
-            self.playerSymbol *= -1
-            self.showBoard()
-            result, self.isEnd = checkWinner(self.board)
-            if result is not None:
-                if result == AI:
-                    print('Computer wins!')
-                elif result == PLAYER:
-                    print('Player wins!')
-                else:
-                    print('Draw')
-                self.isEnd = True
-                return     
 class Player:
     """
     Represents us, the human player
@@ -97,7 +97,7 @@ class Player:
                 print('The column is filled up')
             
 def valid_move(board, column):
-    for i in range(BOARD_ROWS - 1, 0, -1):
+    for i in range(BOARD_ROWS - 1, -1, -1):
         if board[i][column - 1] == 0:
             return (i, column - 1)
     return None
@@ -205,13 +205,16 @@ def evaluate_board(board):
     result, _ = checkWinner(board)
     if result == PLAYER:
         return -100000
-    elif result == AI:
-        return 100000
-    elif result == 0:
-        return 0
     else:
+        fours = 0
         threes = 0
         twos = 0
+        #Check how many fours in a row
+        for i in range(BOARD_ROWS - 3):
+            for j in range(BOARD_COLS - 3):
+                result = check_lines(board, i, j, 4)
+                if result == AI:
+                    fours += 1
         #Check how many three in a row
         for i in range(BOARD_ROWS - 2):
             for j in range(BOARD_COLS - 2):
@@ -224,7 +227,7 @@ def evaluate_board(board):
                 result = check_lines(board, i, j, 2)
                 if result == AI:
                     twos += 1
-        return 100*threes + twos
+        return (100000*fours + 100*threes + twos)
 
 def minimax(board, depth, isMaximizing, alpha, beta):
     """
