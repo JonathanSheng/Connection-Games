@@ -25,4 +25,5 @@ Afterwards, for the reinforced learning agent, uncomment the code denoted at the
 
 ### Future Improvements
 Implementing a Monte Carlo Search Tree as another unique approach. Games such as Go and Chess benefit from MCST, as they have a massive number of game states.
+For Connect Four, the game has been solved, so it is possible to employ an unbeatable AI. An improvement would be to use that evaluation instead of the one I'm currently using.
 In addition, I want to make the game more user friendly; make it more visual and mouse-click based.
