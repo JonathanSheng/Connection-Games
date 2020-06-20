@@ -19,7 +19,7 @@ pip install numpy
 ### Installing
 Copy and run in Git Bash.
 ```
-$ git clone https://github.com/JSheng1689/Tic-Tac-Toe-AI.git
+$ git clone https://github.com/JSheng1689/Connection-Games.git
 ```
 Afterwards, for the reinforced learning agent, uncomment the code denoted at the bottom of the file. Adjust the number of rounds based on how trained you want the bot to be.
 
